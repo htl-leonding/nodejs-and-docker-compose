@@ -7,6 +7,19 @@ This Docker-Application includes:
 - mongo-express
 - traefic as reverse-proxy (<https://docs.traefik.io/>)
 
+## How to start
+
+Start the Containers:
+
+```
+docker-compose up --build
+```
+
+Stop the containers
+
+```
+docker-compose down --rmi 'local'
+```
 
 ## Directory Structure 
 
