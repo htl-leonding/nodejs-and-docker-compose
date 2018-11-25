@@ -1,0 +1,59 @@
+version: '3'
+
+services:
+  reverse-proxy:
+    #restart: always
+    image: traefik:1.7 # The official Traefik docker image
+    #command: --api --docker.exposedbydefault=false # Enables the web UI and tells Træfik to listen to docker, without exposing by default
+    command: --api --docker #.exposedbydefault=false # Enables the web UI and tells Træfik to listen to docker, without exposing by default
+    ports:
+      - "80:80"     # The HTTP port
+      - "8080:8080" # The Web UI (enabled by --api)
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro # So that Traefik can listen to the Docker events
+      - ./traefik.toml:/etc/traefik/traefik.toml
+
+  app:
+    build:
+      dockerfile: Dockerfile
+      context: ./docker/app
+    #restart: always
+    user: "node"
+    working_dir: /home/node/app
+    ports:
+      - "3000:3000"
+    #volumes:
+    #  - ./data/app:/home/node/app
+    #command: npm start
+    links:
+      - mongo
+    depends_on:
+      - mongo
+      - reverse-proxy
+    labels:
+      - traefik.enable=true
+      - traefik.frontend.rule=Host:app.localhost
+
+  mongo:
+    image: mongo:3.2-jessie
+    environment:
+      # Wird die Authentifizierung verwendet, funktioniert mongo-express nicht mehr und sollte dann entfernt werden
+      #MONGO_INITDB_ROOT_USERNAME: root
+      #MONGO_INITDB_ROOT_PASSWORD: example
+      MONGO_DATA_DIR: /data/db
+      MONGO_LOG_DIR: /dev/null
+    volumes:
+      - ./data/mongo:/data/db
+    ports:
+      - "27017:27017"
+
+  mongo-express:
+    image: mongo-express:0.49.0
+    environment:
+      ME_CONFIG_OPTIONS_EDITORTHEME: ambiance
+      ME_CONFIG_BASICAUTH_USERNAME: root
+      ME_CONFIG_BASICAUTH_PASSWORD: example
+    links:
+      - mongo
+    ports:
+      - "8081:8081"
