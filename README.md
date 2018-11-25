@@ -15,6 +15,12 @@ Start the Containers:
 docker-compose up --build
 ```
 
+or 
+
+```
+docker-compose up --build -d
+```
+
 Stop the containers
 
 ```
